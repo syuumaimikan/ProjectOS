@@ -1,6 +1,12 @@
 [package]
 name = "projectos-git"
 version = "0.1.0"
-edition = "2024"
+edition = "2021"
 
 [dependencies]
+projectos-core = { path = "../projectos-core" }
+gix = { version = "0.66", default-features = false, features = ["max-performance", "revision"] }
+anyhow = "1.0"
+thiserror = "1.0"
+chrono = { version = "0.4", features = ["serde"] }
+serde = { version = "1.0", features = ["derive"] }

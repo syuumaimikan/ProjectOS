@@ -31,3 +31,4 @@ sqlx = { version = "0.8.6", features = ["sqlite", "runtime-tokio-rustls"] }
 tauri-plugin-dialog = "2.7.3"
 chrono = { version = "0.4.45", features = ["serde"] }
 projectos-runner = { version = "0.1.0", path = "../../../crates/projectos-runner" }
+projectos-git = { version = "0.1.0", path = "../../../crates/projectos-git" }

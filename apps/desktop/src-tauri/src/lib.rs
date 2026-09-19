@@ -5,6 +5,8 @@ use projectos_db::repository::ProjectRepository;
 use projectos_db::init_db;
 use projectos_discovery::{ProjectScanner, DiscoveryCandidate};
 use projectos_runner::{TaskManager, TaskConfig, TaskInfo, TaskId};
+use projectos_git::{GitService, GitStatus};
+use std::path::Path;
 
 struct AppState {
     db: ProjectRepository,
@@ -63,6 +65,12 @@ async fn list_tasks(state: State<'_, AppState>) -> Result<Vec<TaskInfo>, String>
     Ok(state.runner.list_tasks().await)
 }
 
+#[tauri::command]
+async fn get_git_status(path: String) -> Result<GitStatus, String> {
+    let service = GitService::open(Path::new(&path)).map_err(|e| e.to_string())?;
+    service.get_status().map_err(|e| e.to_string())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -101,7 +109,8 @@ pub fn run() {
             get_projects,
             add_project,
             spawn_task,
-            list_tasks
+            list_tasks,
+            get_git_status
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
