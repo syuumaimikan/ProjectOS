@@ -4,10 +4,12 @@ use projectos_core::domain::{Project, ProjectId};
 use projectos_db::repository::ProjectRepository;
 use projectos_db::init_db;
 use projectos_discovery::{ProjectScanner, DiscoveryCandidate};
+use projectos_runner::{TaskManager, TaskConfig, TaskInfo, TaskId};
 
 struct AppState {
     db: ProjectRepository,
     scanner: ProjectScanner,
+    runner: TaskManager,
 }
 
 #[tauri::command]
@@ -28,6 +30,37 @@ async fn get_projects(state: State<'_, AppState>) -> Result<Vec<Project>, String
         Ok(projects) => Ok(projects),
         Err(e) => Err(e.to_string()),
     }
+}
+
+#[tauri::command]
+async fn add_project(candidate: DiscoveryCandidate, state: State<'_, AppState>) -> Result<Project, String> {
+    let project = Project {
+        id: ProjectId::new(),
+        name: candidate.suggested_root.file_name().unwrap_or_default().to_string_lossy().to_string(),
+        description: Some(format!("{:?} project", candidate.project_type)),
+        created_at: chrono::Utc::now(),
+        updated_at: chrono::Utc::now(),
+        last_activity_at: Some(chrono::Utc::now()),
+        is_archived: false,
+    };
+
+    match state.db.create(&project).await {
+        Ok(_) => Ok(project),
+        Err(e) => Err(e.to_string()),
+    }
+}
+
+#[tauri::command]
+async fn spawn_task(config: TaskConfig, state: State<'_, AppState>) -> Result<TaskId, String> {
+    match state.runner.spawn_task(config).await {
+        Ok(id) => Ok(id),
+        Err(e) => Err(e.to_string()),
+    }
+}
+
+#[tauri::command]
+async fn list_tasks(state: State<'_, AppState>) -> Result<Vec<TaskInfo>, String> {
+    Ok(state.runner.list_tasks().await)
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -58,13 +91,17 @@ pub fn run() {
             app.manage(AppState {
                 db: ProjectRepository::new(pool),
                 scanner: ProjectScanner::new(),
+                runner: TaskManager::new(),
             });
 
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
             scan_directory,
-            get_projects
+            get_projects,
+            add_project,
+            spawn_task,
+            list_tasks
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
