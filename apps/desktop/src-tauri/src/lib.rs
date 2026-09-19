@@ -6,12 +6,14 @@ use projectos_db::init_db;
 use projectos_discovery::{ProjectScanner, DiscoveryCandidate};
 use projectos_runner::{TaskManager, TaskConfig, TaskInfo, TaskId};
 use projectos_git::{GitService, GitStatus};
+use projectos_search::{SearchEngine, SearchDocument, SearchResult};
 use std::path::Path;
 
 struct AppState {
     db: ProjectRepository,
     scanner: ProjectScanner,
     runner: TaskManager,
+    search: SearchEngine,
 }
 
 #[tauri::command]
@@ -71,6 +73,11 @@ async fn get_git_status(path: String) -> Result<GitStatus, String> {
     service.get_status().map_err(|e| e.to_string())
 }
 
+#[tauri::command]
+async fn search_docs(query: String, state: State<'_, AppState>) -> Result<Vec<SearchResult>, String> {
+    state.search.search(&query, 20).map_err(|e| e.to_string())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -87,6 +94,7 @@ pub fn run() {
             let app_data_dir = app.path().app_data_dir().unwrap_or_else(|_| PathBuf::from("./data"));
             std::fs::create_dir_all(&app_data_dir).expect("Failed to create app data dir");
             let db_path = app_data_dir.join("projectos.db");
+            let index_path = app_data_dir.join("index");
 
             app.handle().plugin(tauri_plugin_dialog::init())?;
 
@@ -100,6 +108,7 @@ pub fn run() {
                 db: ProjectRepository::new(pool),
                 scanner: ProjectScanner::new(),
                 runner: TaskManager::new(),
+                search: SearchEngine::open_or_create(&index_path).expect("Failed to initialize search engine"),
             });
 
             Ok(())
@@ -110,7 +119,8 @@ pub fn run() {
             add_project,
             spawn_task,
             list_tasks,
-            get_git_status
+            get_git_status,
+            search_docs
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
