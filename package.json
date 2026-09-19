@@ -1,0 +1,14 @@
+{
+  "name": "projectos-monorepo",
+  "private": true,
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "scripts": {
+    "dev": "pnpm --filter projectos-desktop tauri dev",
+    "build": "pnpm --filter projectos-desktop tauri build",
+    "lint": "pnpm -r run lint",
+    "test": "pnpm -r run test"
+  }
+}
