@@ -1,6 +1,16 @@
 [package]
 name = "projectos-snapshot"
 version = "0.1.0"
-edition = "2024"
+edition = "2021"
 
 [dependencies]
+projectos-core = { path = "../projectos-core" }
+anyhow = "1.0"
+thiserror = "1.0"
+tracing = "0.1"
+uuid = { version = "1.10", features = ["v7", "serde"] }
+serde = { version = "1.0", features = ["derive"] }
+chrono = { version = "0.4", features = ["serde"] }
+ignore = "0.4"
+tar = "0.4"
+flate2 = "1.0"

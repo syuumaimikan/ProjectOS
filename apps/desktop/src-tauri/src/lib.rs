@@ -7,6 +7,7 @@ use projectos_discovery::{ProjectScanner, DiscoveryCandidate};
 use projectos_runner::{TaskManager, TaskConfig, TaskInfo, TaskId};
 use projectos_git::{GitService, GitStatus};
 use projectos_search::{SearchEngine, SearchDocument, SearchResult};
+use projectos_snapshot::{SnapshotEngine, SnapshotInfo};
 use std::path::Path;
 
 struct AppState {
@@ -14,6 +15,7 @@ struct AppState {
     scanner: ProjectScanner,
     runner: TaskManager,
     search: SearchEngine,
+    snapshot: SnapshotEngine,
 }
 
 #[tauri::command]
@@ -78,6 +80,12 @@ async fn search_docs(query: String, state: State<'_, AppState>) -> Result<Vec<Se
     state.search.search(&query, 20).map_err(|e| e.to_string())
 }
 
+#[tauri::command]
+async fn create_snapshot(project_id_str: String, source_path: String, description: Option<String>, state: State<'_, AppState>) -> Result<SnapshotInfo, String> {
+    let pid = projectos_core::domain::ProjectId(uuid::Uuid::parse_str(&project_id_str).map_err(|e| e.to_string())?);
+    state.snapshot.create_snapshot(pid, Path::new(&source_path), description).map_err(|e| e.to_string())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -95,6 +103,7 @@ pub fn run() {
             std::fs::create_dir_all(&app_data_dir).expect("Failed to create app data dir");
             let db_path = app_data_dir.join("projectos.db");
             let index_path = app_data_dir.join("index");
+            let snapshot_path = app_data_dir.join("snapshots");
 
             app.handle().plugin(tauri_plugin_dialog::init())?;
 
@@ -109,6 +118,7 @@ pub fn run() {
                 scanner: ProjectScanner::new(),
                 runner: TaskManager::new(),
                 search: SearchEngine::open_or_create(&index_path).expect("Failed to initialize search engine"),
+                snapshot: SnapshotEngine::new(&snapshot_path).expect("Failed to initialize snapshot engine"),
             });
 
             Ok(())
@@ -120,7 +130,8 @@ pub fn run() {
             spawn_task,
             list_tasks,
             get_git_status,
-            search_docs
+            search_docs,
+            create_snapshot
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

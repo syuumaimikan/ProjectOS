@@ -33,3 +33,5 @@ chrono = { version = "0.4.45", features = ["serde"] }
 projectos-runner = { version = "0.1.0", path = "../../../crates/projectos-runner" }
 projectos-git = { version = "0.1.0", path = "../../../crates/projectos-git" }
 projectos-search = { version = "0.1.0", path = "../../../crates/projectos-search" }
+projectos-snapshot = { version = "0.1.0", path = "../../../crates/projectos-snapshot" }
+uuid = { version = "1.20.0", features = ["v7"] }
