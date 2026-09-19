@@ -3,17 +3,16 @@
   "private": true,
   "engines": {
     "node": ">=20.0.0",
-    "pnpm": ">=9.0.0"
+    "npm": ">=10.0.0"
   },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
-    "dev": "pnpm --filter projectos-desktop tauri dev",
-    "build": "pnpm --filter projectos-desktop tauri build",
-    "lint": "pnpm -r run lint",
-    "test": "pnpm -r run test"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "esbuild"
-    ]
+    "dev": "npm run tauri --workspace=apps/desktop -- dev",
+    "build": "npm run tauri --workspace=apps/desktop -- build",
+    "lint": "npm run lint --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present"
   }
 }
