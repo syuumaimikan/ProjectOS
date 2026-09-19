@@ -25,3 +25,7 @@ tauri = { version = "2.11.3" }
 tauri-plugin-log = "2"
 projectos-core = { version = "0.1.0", path = "../../../crates/projectos-core" }
 projectos-db = { version = "0.1.0", path = "../../../crates/projectos-db" }
+projectos-discovery = { version = "0.1.0", path = "../../../crates/projectos-discovery" }
+tokio = { version = "1.53.1", features = ["full"] }
+sqlx = { version = "0.8.6", features = ["sqlite", "runtime-tokio-rustls"] }
+tauri-plugin-dialog = "2.7.3"

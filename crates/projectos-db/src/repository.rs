@@ -99,4 +99,46 @@ impl ProjectRepository {
             .await?;
         Ok(())
     }
+
+    pub async fn get_all(&self) -> anyhow::Result<Vec<Project>> {
+        let rows = sqlx::query(
+            "SELECT id, name, description, created_at, updated_at, last_activity_at, is_archived 
+             FROM projects WHERE is_archived = 0 ORDER BY updated_at DESC"
+        )
+        .fetch_all(&self.pool)
+        .await?;
+
+        let mut projects = Vec::new();
+        for row in rows {
+            use sqlx::Row;
+            let id = ProjectId(uuid::Uuid::parse_str(row.try_get("id")?)?);
+            let name: String = row.try_get("name")?;
+            let description: Option<String> = row.try_get("description")?;
+            let is_archived: bool = row.try_get("is_archived")?;
+            
+            let created_at_str: String = row.try_get("created_at")?;
+            let created_at: chrono::DateTime<chrono::Utc> = created_at_str.parse()?;
+            
+            let updated_at_str: String = row.try_get("updated_at")?;
+            let updated_at: chrono::DateTime<chrono::Utc> = updated_at_str.parse()?;
+            
+            let last_activity_at_str: Option<String> = row.try_get("last_activity_at")?;
+            let last_activity_at: Option<chrono::DateTime<chrono::Utc>> = match last_activity_at_str {
+                Some(v) => Some(v.parse()?),
+                None => None,
+            };
+
+            projects.push(Project {
+                id,
+                name,
+                description,
+                created_at,
+                updated_at,
+                last_activity_at,
+                is_archived,
+            });
+        }
+        
+        Ok(projects)
+    }
 }

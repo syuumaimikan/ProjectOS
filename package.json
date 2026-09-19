@@ -10,5 +10,10 @@
     "build": "pnpm --filter projectos-desktop tauri build",
     "lint": "pnpm -r run lint",
     "test": "pnpm -r run test"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
   }
 }
